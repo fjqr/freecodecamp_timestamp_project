@@ -18,23 +18,36 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + "/views/index.html");
 });
 
-app.get("/api/:date?", function (req, res) {
+app.get("/api/:date_string?", function (req, res) {
   let newDate, newUnix;
+  let param = Object.values(req.params)[0];
 
   try {
-    if (/\d{4}-\d{2}-\d{2}/g.test(req.params.date)) {
-      newDate = new Date(req.params.date);
-      newUnix = newDate.getTime();
-    } else if (/\d{5,}/g.test(req.params.date)) {
-      newDate = new Date(+req.params.date);
-      newUnix = +req.params.date;
-    } else {
-      res.json({ error: "Invalid Date" });
-      return;
+    switch (true) {
+      case /\d{4}-\d{2}-\d{2}/g.test(param):
+        newDate = new Date(param);
+        newUnix = newDate.getTime();
+        break;
+      case /\d{5,}/g.test(param):
+        newDate = new Date(+param);
+        newUnix = +param;
+        break;
+      case /\s+/g.test(param):
+        newDate = new Date(param);
+        newUnix = newDate.getTime();
+        break;
+      case param === undefined:
+        newDate = new Date();
+        newUnix = newDate.getTime();
+        break;
+      default:
+        res.json({ error: "Invalid Date" });
+        return;
     }
   } catch (error) {
     console.log(error);
   }
+
   res.json({ unix: newUnix, utc: newDate.toUTCString() });
 });
 
